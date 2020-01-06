@@ -85,7 +85,7 @@ public class DriverSignupActivity extends AppCompatActivity {
                             } else {
 
 
-                                Intent i = new Intent(DriverSignupActivity.this, DriverMapActivity.class);
+                                Intent i = new Intent(DriverSignupActivity.this, DriverMapActivityFinal.class);
                                 startActivity(i);
                                 String user_id = mAuth.getCurrentUser().getUid();
 
@@ -98,7 +98,7 @@ public class DriverSignupActivity extends AppCompatActivity {
                     });
                 }
                 else{
-                    Toast.makeText(DriverSignupActivity.this,"Signup Error",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DriverSignupActivity.this,"SignUp Error",Toast.LENGTH_SHORT).show();
                 }
             }
 

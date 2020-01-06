@@ -80,7 +80,7 @@ public class CustomerSignupActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (!task.isSuccessful()) {
-                                Toast.makeText(CustomerSignupActivity.this, "Signup Unsuccessful, Please try again later", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(CustomerSignupActivity.this, "SignUp Unsuccessful, Please try again later", Toast.LENGTH_SHORT).show();
 
                             } else {
 
