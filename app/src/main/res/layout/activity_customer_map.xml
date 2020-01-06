@@ -18,12 +18,13 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="logout"
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="logout"
 
-        android:id="@+id/logout"/>
+            android:id="@+id/logout"/>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,7 +33,7 @@
         android:layout_alignParentRight= "true"
         android:id="@+id/settings"/>
         <androidx.cardview.widget.CardView
-            android:layout_below="@+id/settings"
+           android:layout_below="@+id/settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="20sp">
@@ -47,11 +48,12 @@
 
 </RelativeLayout>
     <LinearLayout
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_gravity="bottom"
-        android:visibility="gone">
+        >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -59,9 +61,9 @@
             android:id="@+id/driverInfo"
             android:layout_gravity="bottom"
             android:orientation="horizontal"
-            android:background="@color/white"
+            android:background="@drawable/background_gradient"
 
-        >
+            android:visibility="gone">
             <ImageView
                 android:layout_width="100sp"
                 android:layout_height="100sp"

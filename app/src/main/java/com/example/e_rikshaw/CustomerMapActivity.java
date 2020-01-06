@@ -1,4 +1,6 @@
+
 package com.example.e_rikshaw;
+/*
 
 import android.Manifest;
 import android.content.Intent;
@@ -48,6 +50,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +73,7 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private String destination;
 
     private ImageView mDriverProfileImage;
-    private TextView mDriverName, mDriverPhone,mDriverRikshaw ;
+    private TextView mDriverName, mDriverPhone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,13 +92,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             mapFragment.getMapAsync(this);
 
+
         }
 
         mDriverInfo= (LinearLayout) findViewById(R.id.driverInfo);
         mDriverProfileImage= (ImageView) findViewById(R.id.driverProfileImage);
         mDriverName= (TextView) findViewById(R.id.driverName);
         mDriverPhone= (TextView) findViewById(R.id.driverPhone);
-        mDriverRikshaw =(TextView) findViewById(R.id.rikshaw);
+//        mDriverRikshaw =(TextView) findViewById(R.id.rikshaw);
 
 
         mLogout = (Button) findViewById(R.id.logout);
@@ -109,8 +113,9 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onClick(View v) {
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(CustomerMapActivity.this, MainActivity.class));
-                finish();
-                return;
+
+                finish( );
+                    return;
             }
         });
         mRequest.setOnClickListener(new View.OnClickListener() {
@@ -118,21 +123,23 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             public void onClick(View v) {
                 if (requestBol) {
                     requestBol = false;
+
                     geoQuery.removeAllListeners();
+
                     driverLocationRef.removeEventListener(driverLocationRefListener);
 
                     if (driverFoundID != null) {
                         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("customerRequest");
                         driverRef.removeValue();
                         driverFoundID = null;
-
+                       // System.out.println(driverFoundID);
                     }
                     driverFound = false;
                     radius = 1;
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
                     GeoFire geoFire = new GeoFire(ref);
-                    try {
+                   try {
                         if (!(geoFire == null)) {
                             geoFire.removeLocation(userId, new GeoFire.CompletionListener() {
                                 @Override
@@ -153,14 +160,14 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     if (pickUpMarker != null) {
                         pickUpMarker.remove();
                     }
-          /*          if(mDriverMarker!=null){
+                       if(mDriverMarker!=null){
                         mDriverMarker.remove();
-                    }*/
+                    }
                     mDriverInfo.setVisibility(View.GONE);
                     mDriverName.setText("");
                     mDriverPhone.setText("");
                     mDriverProfileImage.setImageResource(R.mipmap.user_profile);
-                    mDriverRikshaw.setText("");
+//                    mDriverRikshaw.setText("");
 
                 } else {
                     requestBol = true;
@@ -194,18 +201,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             }
         });
 
-//try
-
-//try
-
-         // Initialize the AutocompleteSupportFragment.
          AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
          getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
-         // Specify the types of place data to return.
          autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
-
-         // Set up a PlaceSelectionListener to handle the response.
          autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
         @Override public void onPlaceSelected(Place place) {
         // TODO: Get info about the selected place.
@@ -217,30 +216,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         }
         });
 
-//try
 
 
-/***       Initialize the AutocompleteSupportFragment.
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME,Place.Field.LAT_LNG));
-
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
-                destination = place.getName().toString();
-
-            }
-
-            @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.\
-            }
-        });
-***/
-//try
     }
 private int radius=1;
     private boolean driverFound= false;
@@ -251,7 +228,7 @@ private void getClosestDriver(){
 
     DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference().child("driversAvailable");
     GeoFire geoFire = new GeoFire(driverLocation);
-    GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(pickUpLocation.latitude,pickUpLocation.longitude),radius);
+    geoQuery = geoFire.queryAtLocation(new GeoLocation(pickUpLocation.latitude,pickUpLocation.longitude),radius);
     geoQuery.removeAllListeners();
 
 
@@ -315,7 +292,7 @@ private ValueEventListener driverLocationRefListener;
                 List<Object> map =(List<Object> )dataSnapshot.getValue();
                 double locationLat = 0;
                 double locationLng = 0;
-                System.out.println("system invoked");
+
                 mRequest.setText("Driver Found");
                 if(map.get(0)!=null){
                     locationLat=Double.parseDouble(map.get(0).toString());
@@ -376,12 +353,12 @@ private ValueEventListener driverLocationRefListener;
 
                         mDriverPhone.setText(map.get("phone").toString());
                     }
-                    if(map.get("rikshaw")!=null){
-                        mDriverRikshaw.setText(map.get("rikshaw").toString());
+                    if(map.get("car")!=null){
+                 //       mDriverRikshaw.setText(map.get("car").toString());
 
                     }
-                    if (map.get("profileImageUrl") != null) {
-                        Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(mDriverProfileImage);
+                    if (map.get("ProfileImageUrl") != null) {
+                        Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mDriverProfileImage);
 
                     }
                 }
@@ -415,6 +392,7 @@ private ValueEventListener driverLocationRefListener;
                 .build();
         mGoogleApiClient.connect();
 
+
     }
 
     @Override
@@ -422,7 +400,9 @@ private ValueEventListener driverLocationRefListener;
         mLastLocation = location;
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(18F));
+        if(!getDriversAroundStarted)
+            getDriversAround();
 
 
     }
@@ -433,6 +413,7 @@ private ValueEventListener driverLocationRefListener;
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(1000);
         mLocationRequest.setFastestInterval(1000);
+
 
         if(ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED &&
@@ -470,4 +451,61 @@ final int LOCATION_REQUEST_CODE =1;
             }
         }
     }
+Boolean getDriversAroundStarted =false;
+List<Marker> markerList =new ArrayList<Marker>();
+
+    private void getDriversAround(){
+        getDriversAroundStarted = true;
+        DatabaseReference driversLocation= FirebaseDatabase.getInstance().getReference().child("driversAvailable");
+        GeoFire geoFire =new GeoFire(driversLocation);
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mLastLocation.getLatitude(),mLastLocation.getLongitude()),3000);
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+            @Override
+            public void onKeyEntered(String key, GeoLocation location) {
+//this  function is used when geo Querry will we used and add the marker  in the marker list i.e  list of  available drivers marker list.
+                for(Marker markerIt : markerList){
+                    if(markerIt.getTag().equals(key))
+                        return;
+
+                }
+
+                LatLng driverLocation = new LatLng(location.latitude,location.longitude);
+                Marker mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLocation).title(key));
+                mDriverMarker.setTag(key);
+                markerList.add(mDriverMarker);
+
+
+            }
+
+            @Override
+            public void onKeyExited(String key) {
+                for(Marker markerIt:markerList)
+                    if(markerIt.getTag().equals(key)){
+                        markerIt.remove();
+                        markerList.remove(markerIt);
+                        return;
+                    }
+            }
+
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
+                for(Marker markerIt:markerList)
+                    if(markerIt.getTag().equals(key)) {
+                        markerIt.setPosition(new LatLng(location.latitude,location.longitude));
+
+                    }
+                    }
+
+            @Override
+            public void onGeoQueryReady() {
+
+            }
+
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
+    }
 }
+*/

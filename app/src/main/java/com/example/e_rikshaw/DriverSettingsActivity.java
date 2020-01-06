@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,7 +27,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +44,8 @@ public class DriverSettingsActivity extends AppCompatActivity{
 
     private String userId;
     private String mName;
-    private String mPhone,mRikshaw;
+    private String mPhone;
+    private String mRikshaw;
     private String mProfileImageUrl;
 
     private Uri resultUri;
@@ -59,7 +58,7 @@ public class DriverSettingsActivity extends AppCompatActivity{
 
         mNameField = (EditText) findViewById(R.id.name);
         mPhoneField = (EditText) findViewById(R.id.phone);
-        mRikshawField =(EditText)findViewById(R.id.rikshaw);
+        mRikshawField =(EditText)findViewById(R.id.carNo);
         mProfileImage = (ImageView) findViewById(R.id.profileImage);
 
         mBack = (Button) findViewById(R.id.back);
@@ -84,6 +83,9 @@ public class DriverSettingsActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 saveUserInformation();
+                startActivity(new Intent(DriverSettingsActivity.this,DriverMapActivity.class));
+
+                        return;
             }
         });
 
@@ -109,8 +111,8 @@ public class DriverSettingsActivity extends AppCompatActivity{
                         mPhone = map.get("phone").toString();
                         mPhoneField.setText(mPhone);
                     }
-                    if(map.get("rikshaw")!=null){
-                        mRikshaw = map.get("rikshaw").toString();
+                    if(map.get("car")!=null){
+                        mRikshaw = map.get("car").toString();
                         mRikshawField.setText(mRikshaw);
                     }
 
@@ -132,59 +134,62 @@ public class DriverSettingsActivity extends AppCompatActivity{
     private void saveUserInformation() {
         mName = mNameField.getText().toString();
         mPhone = mPhoneField.getText().toString();
-
+        mRikshaw =mRikshawField.getText().toString();
         Map userInfo = new HashMap();
         userInfo.put("name", mName);
         userInfo.put("phone", mPhone);
-        userInfo.put("rikshaw", mRikshaw);
+        userInfo.put("car", mRikshaw);
 
         mDriverDatabase.updateChildren(userInfo);
 
         if(resultUri != null) {
 
-            StorageReference filePath = FirebaseStorage.getInstance().getReference().child("profile_images").child(userId);
+             final StorageReference filePath = FirebaseStorage.getInstance().getReference().child("profile_images").child(userId);
             Bitmap bitmap = null;
             try {
-                bitmap = MediaStore.Images.Media.getBitmap(getApplication().getContentResolver(), resultUri);
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), resultUri);
+                    mProfileImage.setImageBitmap(bitmap);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 20, baos);
-            byte[] data = baos.toByteArray();
-            UploadTask uploadTask = filePath.putBytes(data);
-
-            uploadTask.addOnFailureListener(new OnFailureListener() {
+            filePath.putFile(resultUri).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     finish();
                     return;
                 }
-            });
-            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Task<Uri> downloadUrl = taskSnapshot.getStorage().getDownloadUrl();
 
-                    Map newImage = new HashMap();
-                    newImage.put("profileImageUrl", downloadUrl.toString());
-                    mDriverDatabase.updateChildren(newImage);
+                    filePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
 
-                    finish();
-                    return;
+                            Map newImage = new HashMap();
+                            newImage.put("profileImageUrl", uri.toString());
+                            mDriverDatabase.updateChildren(newImage);
+
+
+                            finish();
+                            return;
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            finish();
+                            return;
+                        }
+                    });
                 }
+
             });
-        }else{
-            finish();
         }
-
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1 && resultCode == Activity.RESULT_OK){
+        if(requestCode == 1 && resultCode == Activity.RESULT_OK && data != null && data.getData() != null){
             final Uri imageUri = data.getData();
             resultUri = imageUri;
             mProfileImage.setImageURI(resultUri);

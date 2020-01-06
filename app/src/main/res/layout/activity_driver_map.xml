@@ -34,8 +34,9 @@ tools:context=".DriverMapActivity">
     android:id="@+id/customerInfo"
   android:layout_gravity="bottom"
   android:orientation="horizontal"
-     android:background="@color/white"
-     android:visibility="gone">
+     android:background="@drawable/background_gradient_2"
+
+     >
   <ImageView
       android:layout_width="100sp"
       android:layout_height="100sp"
@@ -61,14 +62,24 @@ tools:context=".DriverMapActivity">
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
     android:id="@+id/customerName"
+       android:text="Name--"
        android:paddingBottom="10sp"
        android:paddingTop="20sp"/>
    <TextView
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:id="@+id/customerPhone"
+       android:text="Phone--"
        android:paddingBottom="10sp"
        android:paddingTop="20sp"/>
+   <Button
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:id="@+id/callCustomer"
+       android:text="CallCustomer"
+
+           />
+   />
   </LinearLayout>
  </LinearLayout>
 </FrameLayout>
