@@ -18,10 +18,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".DriverMapActivityFinal"
-            android:label="@string/title_activity_driver_map_final"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity android:name=".RidecComplete"></activity>
+        <activity android:name=".HistoryActivity" />
         <activity
             android:name=".CustomerMapActivityFinal"
             android:label="@string/title_activity_main3"
@@ -33,6 +31,7 @@
         <activity android:name=".DriverSettingsActivity" />
         <activity android:name=".CustomerSettingsActivity" />
         <activity android:name=".CustomerMapActivity" />
+        <activity android:name=".ui.History.HistoryFragment" />
         <!--
       The API key for Google Maps-based APIs is defined as a string resource.
       (See the file "res/values/google_maps_api.xml").

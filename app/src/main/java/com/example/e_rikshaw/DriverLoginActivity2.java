@@ -75,7 +75,7 @@ public class DriverLoginActivity2 extends AppCompatActivity {
                             if (!task.isSuccessful()) {
                                 Toast.makeText(DriverLoginActivity2.this, "Login Error,Please Try again later", Toast.LENGTH_SHORT).show();
                             } else {
-                                Intent intToHome = new Intent(DriverLoginActivity2.this, DriverMapActivityFinal.class);
+                                Intent intToHome = new Intent(DriverLoginActivity2.this, DriverMapActivity.class);
                                 startActivity(intToHome);
                             }
                         }

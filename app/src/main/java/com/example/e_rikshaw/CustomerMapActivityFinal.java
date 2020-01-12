@@ -1,6 +1,7 @@
 package com.example.e_rikshaw;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -9,9 +10,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
@@ -44,6 +50,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
@@ -64,52 +71,60 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import at.markushi.ui.CircleButton;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
+public class CustomerMapActivityFinal<place1> extends AppCompatActivity  implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
-
+    Spinner mNoOfSeats;
     FirebaseAuth mAuth;
     String userId,mName,mProfileImageUrl,mPhone;
 
 
+    private int flag=0;
     FirebaseUser currentUser;
     DatabaseReference mRef;
     StorageReference mStorage;
     Location mLastLocation;
     LocationRequest mLocationRequest;
-    private Button  mRequest, mSettings;
+    private Button  mRequest,mConfirm,mGotIt;
+    private ImageButton mFareInfo;
+    private CircleButton mSearchButton;
     private LatLng pickUpLocation;
+    private int searchLayoutStatus=0;
 
     private LinearLayout mDriverInfo;
+    private CardView mSearchNearby,mFinalConfirmationLayout;
     private Boolean requestBol = false;
     private Marker pickUpMarker;
     private String destination;
-
+    //private LatLng destinationLatLng;
     private ImageView mDriverProfileImage;
-    private TextView mDriverName, mDriverPhone;
+    private TextView mDriverName, mDriverPhone,mPrice,mTotalFare,mDiscount,mPayableAmount;
+    int discount=1;
 
-
+    Dialog mFareInfoDialog;
+    private   double latitude,longitude;
+    private  int ProximityRadius =10000,status=0;
+    ;
     private AppBarConfiguration mAppBarConfiguration;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_map_activity_final);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
-
-        mAuth=FirebaseAuth.getInstance();
-        currentUser=mAuth.getCurrentUser();
-        userId=mAuth.getCurrentUser().getUid();
-        mRef=FirebaseDatabase.getInstance().getReference().child("users").child("customers").child(userId);
-        mStorage= FirebaseStorage.getInstance().getReference().child("customer_profile_images").child(userId);
-
-
+        mSearchButton=findViewById(R.id.search);
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        userId = mAuth.getCurrentUser().getUid();
+        mFareInfo=findViewById(R.id.fareInfo);
+        mRef = FirebaseDatabase.getInstance().getReference().child("users").child("customers").child(userId);
+        mStorage = FirebaseStorage.getInstance().getReference().child("customer_profile_images").child(userId);
+        mSearchNearby=findViewById(R.id.searchLayout);
+        mFinalConfirmationLayout=findViewById(R.id.FinalConfirmationLayout);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         if (ActivityCompat.checkSelfPermission(this,
@@ -128,107 +143,168 @@ public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMa
         mDriverPhone = (TextView) findViewById(R.id.driverPhone);
 //        mDriverRikshaw =(TextView) findViewById(R.id.rikshaw);
 
+        mNoOfSeats=findViewById(R.id.no_of_seats);
+        mPrice=findViewById(R.id.priceText);
 
 
-        mRequest = (Button) findViewById(R.id.request);
-        mSettings = (Button) findViewById(R.id.settings);
-//        PlacesClient placesClient = Places.createClient(this);
 
 
+        mConfirm = (Button) findViewById(R.id.confirm);
+        mRequest=(Button)findViewById(R.id.request);
+        //  PlacesClient placesClient = Places.createClient(this);
+
+        mFareInfoDialog = new Dialog(CustomerMapActivityFinal.this);
+
+        List<String> list1 =new ArrayList<String>();
+        list1.add("1");
+        list1.add("2");
+        list1.add("3");
+
+        ArrayAdapter<String> arrayAdapter =new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,list1);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mNoOfSeats.setAdapter(arrayAdapter);
+        mNoOfSeats.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mNoOfSeats.setSelection(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
+mNoOfSeats.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+        mPrice.setText(Integer.toString(Integer.parseInt(mNoOfSeats.getSelectedItem().toString())*7-discount));
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+});
 
         mRequest.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        mFinalConfirmationLayout.setVisibility(View.VISIBLE);
+
+        mFareInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (requestBol) {
-                    requestBol = false;
+                mFareInfoDialog.setContentView(R.layout.pricechart);
 
-                    geoQuery.removeAllListeners();
+                mFareInfoDialog.show();
+                mGotIt=mFareInfoDialog.findViewById(R.id.gotIt);
+                mDiscount=mFareInfoDialog.findViewById(R.id.Discount);
+                mTotalFare=mFareInfoDialog.findViewById(R.id.totalFare);
+                mPayableAmount=mFareInfoDialog.findViewById(R.id.payableAmount);
+                mTotalFare.setText(Integer.toString(Integer.parseInt(mNoOfSeats.getSelectedItem().toString())*7));
+                mDiscount.setText(Integer.toString(discount));
+                mPayableAmount.setText(Integer.toString(Integer.parseInt(mNoOfSeats.getSelectedItem().toString())*7-discount));
 
-                    driverLocationRef.removeEventListener(driverLocationRefListener);
+                mGotIt.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mFareInfoDialog.dismiss();
 
-                    if (driverFoundID != null) {
-                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("customerRequest");
-                        driverRef.removeValue();
-                        driverFoundID = null;
-                        // System.out.println(driverFoundID);
                     }
-                    driverFound = false;
-                    radius = 1;
-                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
-                    GeoFire geoFire = new GeoFire(ref);
-                    try {
-                        if (!(geoFire == null)) {
-                            geoFire.removeLocation(userId, new GeoFire.CompletionListener() {
-                                @Override
-                                public void onComplete(String key, DatabaseError error) {
-                                    if (error != null) {
-                                        System.err.println("There was an error removing the location from GeoFire: " + error);
+                });
+            }
+        });
+        status=1;
+        if(status==1&& requestBol && driverFound){
+            endRide();
+        }
+    }
+});
 
-                                    } else {
-                                        System.out.println("Location removed on server successfully!");
 
-                                    }
-                                }
-                            });
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    if (pickUpMarker != null) {
-                        pickUpMarker.remove();
-                    }
-                    if (mDriverMarker != null) {
-                        mDriverMarker.remove();
-                    }
-                    mDriverInfo.setVisibility(View.GONE);
-                    mDriverName.setText("");
-                    mDriverPhone.setText("");
-                    mDriverProfileImage.setImageResource(R.mipmap.user_profile);
-//                  mDriverRikshaw.setText("");
 
-                } else {
+        mSearchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            if(searchLayoutStatus==0) {
+                mSearchNearby.setVisibility(View.VISIBLE);
+                searchLayoutStatus=1;
+            }
+            else if(searchLayoutStatus==1){
+                mSearchNearby.setVisibility(View.GONE);
+                searchLayoutStatus=0;
+            }
+            }
+        });
+
+
+
+
+
+
+
+        mConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (requestBol && driverFound) {
+                        endRide();
+
+                }
+                else {
+                    mFinalConfirmationLayout.setVisibility(View.INVISIBLE);
                     requestBol = true;
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
-                    GeoFire geoFire = new GeoFire(ref);
-                    geoFire.setLocation(userId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new GeoFire.CompletionListener() {
-                        @Override
-                        public void onComplete(String key, DatabaseError error) {
-                            Log.e("mytag", "geofire complete");
-                        }
-                    });
+                    Map map=new HashMap();
+                    map.put("seats",mNoOfSeats.getSelectedItem().toString());
 
-                    pickUpLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                    pickUpMarker = mMap.addMarker(new MarkerOptions().position(pickUpLocation).title("pickup here"));
+                     GeoFire geoFire = new GeoFire(ref);
+                    try {
+                        geoFire.setLocation(userId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()), new GeoFire.CompletionListener() {
+                            @Override
+                            public void onComplete(String key, DatabaseError error) {
+                                Log.e("mytag", "geofire complete");
 
-                    mRequest.setText("Getting your Driver.....");
+                            }
+                        });
 
+                        pickUpLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                        pickUpMarker = mMap.addMarker(new MarkerOptions().position(pickUpLocation).title("pickup here"));
+                        mRequest.setText("Getting your Driver.....");
+                        flag=1;
 
-                    getClosestDriver();
-
+                        getClosestDriver();
+                    } catch (NullPointerException e) {
+                        Log.d("Null pointer exception", "nullpointerexception");
+                    }
+ref.child(userId).updateChildren(map);
                 }
             }
         });
-        mSettings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(CustomerMapActivityFinal.this, CustomerSettingsActivity.class);
-                startActivity(intent);
-                return;
-            }
-        });
+
+
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), "AIzaSyAH50yMhxkO7TUCU1Mx8VJciKIqj7a1Idg");
+        }
 
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
 
         autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
                 destination = place.getName().toString();
+    //            destinationLatLng = place.getLatLng();
+
             }
+
 
             @Override
             public void onError(Status status) {
@@ -237,7 +313,8 @@ public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMa
         });
 
 
-    }
+}
+
 
     private int radius = 1;
     private boolean driverFound = false;
@@ -252,25 +329,44 @@ public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMa
         geoQuery = geoFire.queryAtLocation(new GeoLocation(pickUpLocation.latitude, pickUpLocation.longitude), radius);
         geoQuery.removeAllListeners();
 
-
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 if (!driverFound && requestBol) {
-                    driverFound = true;
-                    driverFoundID = key;
-                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("customerRequest");
-                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    HashMap map = new HashMap();
-                    map.put("customerRideId", customerId);
+                    DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(key);
+                    mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists() && dataSnapshot.getChildrenCount() > 0) {
+                                Map<String, Object> driverMap = (Map<String, Object>) dataSnapshot.getValue();
+                                if (driverFound) {
+                                    return;
+                                }
 
-                    map.put("destination", destination);
-                    driverRef.updateChildren(map);
+                                driverFound = true;
+                                driverFoundID = dataSnapshot.getKey();
 
-                    getDriverLocation();
-                    getDriverInfo();
-                    mRequest.setText("Looking for Drivers Location...");
+                                DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("customerRequest");
 
+                                String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                HashMap map = new HashMap();
+                                map.put("customerRideId", customerId);
+                                map.put("destination", destination);
+//                              map.put("destinationLat", destinationLatLng.latitude);
+  //                              map.put("destinationLng", destinationLatLng.longitude);
+                                driverRef.updateChildren(map);
+
+                                getDriverLocation();
+                                getDriverInfo();
+                                getHasRideEnded();
+                                mRequest.setText("Looking for Driver Location....");
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
                 }
             }
 
@@ -392,6 +488,84 @@ public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMa
 
     }
 
+    private DatabaseReference driveHasEndedRef;
+    private ValueEventListener driveHasEndedRefListener;
+    private void getHasRideEnded(){
+        driveHasEndedRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("customerRequest").child("customerRideId");
+        driveHasEndedRefListener = driveHasEndedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+
+                }else{
+                    endRide();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    private void endRide() {
+        requestBol = false;
+
+            geoQuery.removeAllListeners();
+            driverLocationRef.removeEventListener(driverLocationRefListener);
+            driveHasEndedRef.removeEventListener(driveHasEndedRefListener);
+
+            if (driverFoundID != null) {
+                DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("customerRequest");
+                driverRef.removeValue();
+                driverFoundID = null;
+
+            }
+            driverFound = false;
+            radius = 1;
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+            GeoFire geoFire = new GeoFire(ref);
+            //geoFire.removeLocation(userId);
+            try {
+                if (!(geoFire == null)) {
+                    geoFire.removeLocation(userId, new GeoFire.CompletionListener() {
+                        @Override
+                        public void onComplete(String key, DatabaseError error) {
+                            if (error != null) {
+                                System.err.println("There was an error removing the location from GeoFire: " + error);
+
+                            } else {
+                                System.out.println("Location removed on server successfully!");
+
+                            }
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+            if (pickUpMarker != null) {
+                pickUpMarker.remove();
+            }
+            if (mDriverMarker != null) {
+                mDriverMarker.remove();
+            }
+            mFinalConfirmationLayout.setVisibility(View.INVISIBLE);
+            startActivity(new Intent(CustomerMapActivityFinal.this,RidecComplete.class));
+
+            mRequest.setText("call E-Rikshaw");
+
+            mDriverInfo.setVisibility(View.GONE);
+            mDriverName.setText("");
+            mDriverPhone.setText("");
+            // mDriverCar.setText("Destination: --");
+            mDriverProfileImage.setImageResource(R.mipmap.user_profile);
+        }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -419,10 +593,15 @@ public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMa
 
     @Override
     public void onLocationChanged(Location location) {
+        latitude=location.getLatitude();
+        longitude=location.getLongitude();
         mLastLocation = location;
+        LatLng initialLoc= mMap.getCameraPosition().target;
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(18F));
+
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
         if (!getDriversAroundStarted)
             getDriversAround();
 
@@ -568,6 +747,16 @@ public class CustomerMapActivityFinal extends AppCompatActivity  implements OnMa
                     case R.id.nav_profile: {
                         startActivity(new Intent(CustomerMapActivityFinal.this, CustomerSettingsActivity.class));
                         Toast.makeText(CustomerMapActivityFinal.this, "Profile", Toast.LENGTH_SHORT).show();
+                    break;
+                    }
+                    case R.id.nav_history: {
+
+
+                        Intent i= new Intent(CustomerMapActivityFinal.this, HistoryActivity.class);
+                        i.putExtra("customerOrDriver","customers");
+                            startActivity(i);
+                        Toast.makeText(CustomerMapActivityFinal.this, "history", Toast.LENGTH_SHORT).show();
+                    break;
                     }
                 }
                 return false;
@@ -636,5 +825,91 @@ public void  updateNavBar(){
             return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                     || super.onSupportNavigateUp();
         }
+public void onClick(View v){
+
+
+String hospitals="hospital",schools="school",restaurants="restaurant",markets="market",Metros="metro";
+Object transferData[]=new Object[2];
+GetNearbyPlaces getNearbyPlaces= new GetNearbyPlaces();
+
+
+
+
+ switch (v.getId()){
+        case R.id.hospitals:
+            mMap.clear();
+            String url=getUrl(latitude,longitude,hospitals);
+            transferData[0]=mMap;
+            transferData[1]=url;
+            getNearbyPlaces.execute(transferData);
+            Toast.makeText(this,"searching for nearby hospitals...",Toast.LENGTH_LONG).show();
+
+            Toast.makeText(this,"showing nearby hospitals...",Toast.LENGTH_LONG).show();
+            break;
+
+     case R.id.schools:
+         mMap.clear();
+         url=getUrl(latitude,longitude,schools);
+         transferData[0]=mMap;
+         transferData[1]=url;
+         getNearbyPlaces.execute(transferData);
+         Toast.makeText(this,"searching for nearby schools...",Toast.LENGTH_LONG).show();
+
+         Toast.makeText(this,"showing nearby schools...",Toast.LENGTH_LONG).show();
+         break;
+
+     case R.id.restaurants:
+         mMap.clear();
+         url=getUrl(latitude,longitude,restaurants);
+         transferData[0]=mMap;
+         transferData[1]=url;
+         getNearbyPlaces.execute(transferData);
+         Toast.makeText(this,"searching for nearby restaurants...",Toast.LENGTH_LONG).show();
+         Toast.makeText(this,"showing nearby restaurants...",Toast.LENGTH_LONG).show();
+         break;
+
+     case R.id.metros:
+         mMap.clear();
+         url=getUrl(latitude,longitude,Metros);
+         transferData[0]=mMap;
+         transferData[1]=url;
+         getNearbyPlaces.execute(transferData);
+         Toast.makeText(this,"searching for nearby metro...",Toast.LENGTH_LONG).show();
+
+         Toast.makeText(this,"showing nearby metro...",Toast.LENGTH_LONG).show();
+         break;
+
+
+     case R.id.marketPlace:
+         mMap.clear();
+         url=getUrl(latitude,longitude,markets);
+         transferData[0]=mMap;
+         transferData[1]=url;
+         getNearbyPlaces.execute(transferData);
+         Toast.makeText(this,"searching for nearby marketPlaces...",Toast.LENGTH_LONG).show();
+
+         Toast.makeText(this,"showing nearby marketPlaces...",Toast.LENGTH_LONG).show();
+         break;
+
+
+ }
+
+}
+    private String  getUrl(double latitude,double longitude,String nearbyPlace){
+        StringBuilder googleURL=new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        googleURL.append("location="+latitude+","+longitude);
+        googleURL.append("&radius="+ProximityRadius);
+        googleURL.append("&type="+nearbyPlace);
+        googleURL.append("&sensor=true");
+        googleURL.append("&key="+"AIzaSyAH50yMhxkO7TUCU1Mx8VJciKIqj7a1Idg");
+
+        Log.d("CustomerMapActivityFInal","url= "+googleURL.toString());
+        return googleURL.toString();
+
+
+    }
+
+
+
 
 }

@@ -9,6 +9,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
@@ -21,22 +22,16 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_customer_map_activity_final" />
+
     <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="settings"
-            android:layout_gravity="right"
-            android:layout_alignParentRight= "true"
-            android:id="@+id/settings"/>
+        android:layout_height="wrap_content"
+        >
         <androidx.cardview.widget.CardView
             android:layout_below="@+id/settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20sp">
+            android:layout_margin="60sp">
             <fragment
                 android:id="@+id/autocomplete_fragment"
                 android:layout_width="match_parent"
@@ -44,28 +39,130 @@
                 android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
                 />
         </androidx.cardview.widget.CardView>
-
     </RelativeLayout>
-    <LinearLayout
 
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_gravity="bottom">
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="bottom"
-        android:id="@+id/driverInfo"
-
 
         >
+    <at.markushi.ui.CircleButton
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@mipmap/nearme_foreground"
+        android:id="@+id/search"
+        android:layout_marginBottom="60dp"/>
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/searchLayout"
+        android:visibility="gone"
+        android:layout_toEndOf="@+id/search"
+        android:elevation="4dp"
+        android:layout_marginLeft="6dp"
+        android:layout_gravity="center_horizontal">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-        <LinearLayout
+            <at.markushi.ui.CircleButton
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@mipmap/hospitals_foreground"
+                android:id="@+id/hospitals"
+                android:onClick="onClick"
+                android:layout_marginTop="4dp"
+                android:elevation="4dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"
+                />
+
+            <at.markushi.ui.CircleButton
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@mipmap/school_foreground"
+                android:id="@+id/schools"
+                android:onClick="onClick"
+                android:layout_toEndOf="@+id/hospitals"
+                android:elevation="4dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginRight="4dp"/>
+
+            <at.markushi.ui.CircleButton
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@mipmap/restaurants_foreground"
+                android:id="@+id/restaurants"
+                android:onClick="onClick"
+                android:layout_toEndOf="@+id/schools"
+                android:layout_marginRight="4dp"
+                android:layout_marginTop="4dp"
+                />
+
+
+            <at.markushi.ui.CircleButton
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@mipmap/shopping_foreground"
+                android:id="@+id/marketPlace"
+                android:onClick="onClick"
+                android:layout_toEndOf="@+id/restaurants"
+                android:layout_marginRight="4dp"
+                android:layout_marginTop="4dp"
+
+                />
+
+            <at.markushi.ui.CircleButton
+
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@mipmap/colleges_foreground"
+                android:id="@+id/metros"
+                android:onClick="onClick"
+                android:layout_toEndOf="@+id/marketPlace"
+                android:layout_marginRight="4dp"
+                android:layout_marginTop="4dp"
+
+                />
+
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+
+</RelativeLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:id="@+id/request"
+        android:background="@color/Black"
+        android:textColor="@color/white"
+        android:text="Call E-Rikshaw"/>
+
+</LinearLayout>
+
+
+
+    <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:orientation="horizontal"
             android:background="@drawable/background_gradient"
-
-            >
-            <ImageView
+            android:visibility="gone"
+            android:id="@+id/driverInfo"
+        android:layout_marginBottom="44dp"
+        >
+            <de.hdodenhof.circleimageview.CircleImageView
                 android:layout_width="100sp"
                 android:layout_height="100sp"
                 android:id="@+id/driverProfileImage"
@@ -104,18 +201,97 @@
                     android:id="@+id/driverRikshaw"
                     android:paddingBottom="10sp"
                     android:paddingTop="20sp"/>
-            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="300dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:id="@+id/FinalConfirmationLayout"
+        android:visibility="gone"
+
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="40dp"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Number of seats:"
+               android:textSize="20dp"
+                android:textColor="@color/Black"
+
+                />
+
+            <Spinner
+                android:id="@+id/no_of_seats"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="20dp"
+                />
 
         </LinearLayout>
-    </LinearLayout>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:id="@+id/request"
-        android:text="Take Ride"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="40dp"
+
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Price :"
+                android:textSize="20dp"
+                android:textColor="@color/Black"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:textSize="20dp"
+                android:layout_marginLeft="60dp"
+                android:textColor="@color/Black"
+                android:layout_marginRight="40dp"
+                android:id="@+id/priceText"
+                />
 
 
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+               android:src="@drawable/info"
+                android:background="@color/white"
+                android:id="@+id/fareInfo"
+
+                />
+
+
+        </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="Conifrm" />
+
+    </androidx.cardview.widget.CardView>
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

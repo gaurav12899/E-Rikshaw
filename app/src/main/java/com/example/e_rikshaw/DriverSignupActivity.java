@@ -85,7 +85,7 @@ public class DriverSignupActivity extends AppCompatActivity {
                             } else {
 
 
-                                Intent i = new Intent(DriverSignupActivity.this, DriverMapActivityFinal.class);
+                                Intent i = new Intent(DriverSignupActivity.this, DriverMapActivity.class);
                                 startActivity(i);
                                 String user_id = mAuth.getCurrentUser().getUid();
 
