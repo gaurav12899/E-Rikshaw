@@ -22,7 +22,7 @@ public class HistoryFragment extends AppCompatActivity {
     }
 
 
-private RecyclerView mHistoryRecylerView;
+private RecyclerView mHistoryRecylerView;//mhistory recycle view
 private RecyclerView.Adapter mHistoryAdopter;
 private RecyclerView.LayoutManager mHistoryLayoutManager;
 
